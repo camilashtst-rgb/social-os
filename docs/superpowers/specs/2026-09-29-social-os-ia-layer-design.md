@@ -49,8 +49,9 @@ Adicionar inteligência de IA ao Social OS existente para resolver duas dores ce
 
 ### 4.1 Tabela `clients` — campos novos
 ```
-avatar_doc     text   -- markdown completo do avatar/ICP (ex: avatar-2026-05-14.md)
-brain_doc      text   -- markdown do business brain (ICP, ofertas, voice 3+3, regra-âncora)
+avatar_doc        text   -- markdown completo do avatar/ICP (ex: avatar-2026-05-14.md)
+brain_doc         text   -- markdown do business brain (ICP, ofertas, voice 3+3, regra-âncora)
+sales_letter_doc  text   -- carta de vendas completa: voz, objeções respondidas, social proof, mecanismo único
 ```
 
 ### 4.2 Tabela `contents` — campos novos
@@ -76,9 +77,21 @@ Regiões: {clients.cities}
 
 ## AVATAR / ICP
 {clients.avatar_doc}
+<!-- inclui: Schwartz awareness level, sophistication level, dor profunda, desejo, objeções, gatilhos -->
 
 ## BUSINESS BRAIN
 {clients.brain_doc}
+<!-- inclui: ICP, ofertas, voice 3 sempre + 3 nunca, regra-âncora -->
+
+## CARTA DE VENDAS (referência de voz e narrativa)
+{clients.sales_letter_doc}
+<!-- inclui: tom do Vandilson, objeções respondidas, social proof, mecanismo #NovoTempoDOALTO -->
+
+## REFERÊNCIA DE COPY
+Framework: Eugene Schwartz — Breakthrough Advertising
+Regra: declare awareness level e sophistication level no início de cada peça gerada.
+Awareness do avatar: {avatar_awareness_level}/5 — escreva para esse nível.
+Sophistication do mercado: {avatar_sophistication_level}/5 — evite promessas genéricas já ouvidas.
 
 ## CONTEÚDO ATUAL
 Formato: {contents.format}
@@ -87,7 +100,7 @@ Pilar: {contents.pillar}
 Título: {contents.title}
 ```
 
-Se `avatar_doc` ou `brain_doc` estiverem vazios, a Edge Function usa os campos estruturados existentes como fallback (segment, target_audience, voice_tone).
+Se `avatar_doc` ou `brain_doc` estiverem vazios, a Edge Function usa os campos estruturados existentes como fallback (segment, target_audience, voice_tone). `sales_letter_doc` é opcional — quando presente, tem precedência para calibração de tom e objeções.
 
 ---
 
@@ -98,13 +111,14 @@ Se `avatar_doc` ou `brain_doc` estiverem vazios, a Edge Function usa os campos e
 **Onde:** Tela de perfil do cliente (tab ou seção colapsável)
 
 **UI:**
-- Dois textareas markdown editáveis: "Avatar / ICP" e "Business Brain"
+- Três textareas markdown editáveis: "Avatar / ICP", "Business Brain" e "Carta de Vendas"
 - Botão "Salvar contexto"
-- Badge "IA configurada ✓" quando ambos os campos estão preenchidos
+- Badge "IA configurada ✓" quando pelo menos `avatar_doc` + `brain_doc` estão preenchidos
+- Badge "IA completa ✓✓" quando os três campos estão preenchidos
 
 **Comportamento:**
-- Conteúdo é salvo em `clients.avatar_doc` e `clients.brain_doc`
-- Seed inicial para DOALTO: inserido via migration com os documentos `avatar-2026-05-14.md` e `business-brain.md`
+- Conteúdo é salvo em `clients.avatar_doc`, `clients.brain_doc` e `clients.sales_letter_doc`
+- Seed inicial para DOALTO: inserido via migration com `avatar-2026-05-14.md`, `business-brain.md` e a carta de vendas completa do Vandilson Alves
 
 ---
 
@@ -222,7 +236,19 @@ Todas as funções:
 
 ---
 
-## 9. Few-Shot Examples — Headlines DOALTO
+## 9. Framework de Copy — Eugene Schwartz
+
+Todo conteúdo gerado segue Breakthrough Advertising como framework primário:
+
+- **Regra de abertura:** nunca abrir com benefício genérico. Abrir nomeando a dor específica do avatar ou o mecanismo único — conforme awareness level.
+- **Awareness 3/5 (padrão Rodrigo):** o prospect sabe que tem um problema e que existem soluções, mas ainda avalia em quem confiar. Copy deve nomear a dor conhecida e apresentar o mecanismo diferenciador (o ritual do Alves, o SLA no contrato, o laudo técnico, as motos de emergência).
+- **Sophistication 3/5:** mercado intermediário-saturado. Promessas genéricas ("atendimento 24h", "técnico certificado") não convertem. Precisa de prova específica e mecanismo concreto.
+- **Output obrigatório das Edge Functions de geração:** cada resultado começa com um comentário de header declarando awareness e sophistication usados:
+  ```
+  <!-- Schwartz: Awareness 3/5 (Problem-aware) × Sophistication 3/5 -->
+  ```
+
+## 9b. Few-Shot Examples — Headlines DOALTO
 
 Injetados no prompt de `ai-multiply-content`. Baseados nos conteúdos reais fornecidos:
 
@@ -264,6 +290,14 @@ Nunca expostas no frontend. Configuradas em Supabase → Settings → Edge Funct
 Migration inicial popula:
 - `clients.avatar_doc` com conteúdo de `avatar-2026-05-14.md`
 - `clients.brain_doc` com conteúdo de `business-brain.md`
+- `clients.sales_letter_doc` com a carta de vendas completa do Eng. Vandilson Alves
+
+**O que a carta de vendas habilita na geração:**
+- Tom epistolar/direto (carta assinada pelo Vandilson, não voz de marca genérica)
+- Objeções já respondidas disponíveis como referência: "só a fabricante pode cuidar?", "como sei a procedência das peças?", "outra empresa pode vistoriar?", "e o acompanhamento de outros serviços?"
+- Social proof concreto para injetar quando relevante: Le Parc (55 elevadores), Parque Shopping Aracaju (9 elevadores + 6 escadas), hospitais, faculdades, hotéis
+- Mecanismo único: #NovoTempoDOALTO (Agilidade + Transparência + Tecnologia)
+- Diferencial operacional: técnicos de moto para emergências, remuneração 1/3 superior, rastreamento em tempo real
 
 ---
 
