@@ -125,6 +125,14 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
     onUpdate()
   }
 
+  async function deleteContent() {
+    if (!window.confirm(`Apagar "${content!.title}"? Essa ação não pode ser desfeita.`)) return
+    await supabase.from('content_checklist').delete().eq('content_id', content!.id)
+    await supabase.from('content_history').delete().eq('content_id', content!.id)
+    await supabase.from('contents').delete().eq('id', content!.id)
+    onUpdate()
+  }
+
   async function generateCaption() {
     setLoadingCaption(true)
     const { data } = await supabase.functions.invoke('ai-generate-caption', {
@@ -194,9 +202,14 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', flex: 1, marginRight: 12, letterSpacing: '-0.01em' }}>
               {content.title}
             </div>
-            <button onClick={onClose} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, cursor: 'pointer', padding: '4px 8px', color: 'var(--text-secondary)', flexShrink: 0 }}>
-              ✕
-            </button>
+            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              <button onClick={deleteContent} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, cursor: 'pointer', padding: '4px 10px', color: 'var(--terracotta)', fontWeight: 500 }}>
+                Apagar
+              </button>
+              <button onClick={onClose} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, cursor: 'pointer', padding: '4px 8px', color: 'var(--text-secondary)' }}>
+                ✕
+              </button>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <StatusPill status={content.status} />

@@ -18,6 +18,7 @@ export function Ideas() {
   const [trendResult, setTrendResult] = useState<any>(null)
   const [loadingTrends, setLoadingTrends] = useState(false)
   const [trendClientId, setTrendClientId] = useState('')
+  const [promotingId, setPromotingId] = useState<string | null>(null)
   const navigate = useNavigate()
 
   async function load() {
@@ -240,7 +241,10 @@ export function Ideas() {
           </div>
           <PriorityBadge priority={idea.priority} />
           <button
+            disabled={promotingId === idea.id}
             onClick={async () => {
+              if (promotingId) return
+              setPromotingId(idea.id)
               await supabase.from('contents').insert({
                 title: idea.title,
                 client_id: idea.client_id,
@@ -252,20 +256,21 @@ export function Ideas() {
                 priority: idea.priority,
                 notes: idea.notes ?? null,
               })
+              setPromotingId(null)
               navigate('/conteudos')
             }}
             style={{
-              background: 'var(--caramel)',
-              color: '#fff',
+              background: promotingId === idea.id ? 'var(--border)' : 'var(--caramel)',
+              color: promotingId === idea.id ? 'var(--text-tertiary)' : '#fff',
               border: 'none',
               borderRadius: 6,
               padding: '4px 12px',
               fontSize: 12,
               fontWeight: 600,
-              cursor: 'pointer',
+              cursor: promotingId === idea.id ? 'not-allowed' : 'pointer',
             }}
           >
-            Promover → Conteúdo
+            {promotingId === idea.id ? 'Criando...' : 'Promover → Conteúdo'}
           </button>
         </div>
       ))}
