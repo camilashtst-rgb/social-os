@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -9,8 +9,8 @@
   --charcoal: #3F3B37;
   --white: #FFFFFF;
   --terracotta: #C0715A;
-  --font-display: 'Cormorant Garamond', serif;
-  --font-body: 'Jost', sans-serif;
+  --font-display: 'Montserrat', sans-serif;
+  --font-body: 'Montserrat', sans-serif;
 }
 
 body {
