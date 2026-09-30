@@ -16,8 +16,32 @@ const btn = (loading: boolean, onClick: () => void, label: string, loadingLabel:
   </button>
 )
 
+function copyText(text: string) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+    } else {
+      const el = document.createElement('textarea')
+      el.value = text
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
+      document.body.appendChild(el)
+      el.focus()
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+    }
+  } catch (e) {
+    console.error('Erro ao copiar:', e)
+  }
+}
+
 const copyBtn = (text: string, label: string) => (
-  <button onClick={() => navigator.clipboard.writeText(text)} style={{
+  <button onClick={() => {
+    copyText(text)
+    const btn = document.activeElement as HTMLButtonElement
+    if (btn) { const orig = btn.textContent; btn.textContent = 'Copiado!'; setTimeout(() => { btn.textContent = orig }, 1500) }
+  }} style={{
     background: 'none', border: '1px solid var(--caramel)', color: 'var(--caramel)',
     borderRadius: 6, padding: '5px 14px', fontSize: 12, cursor: 'pointer', marginTop: 6,
   }}>
