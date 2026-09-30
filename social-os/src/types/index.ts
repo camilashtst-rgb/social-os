@@ -117,6 +117,7 @@ export interface ImportantDate {
   relevance: string | null
   should_create_content: boolean
   notes: string | null
+  client_id: string | null
   created_at: string
 }
 

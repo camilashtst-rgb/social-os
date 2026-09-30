@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Client } from '../types'
 
-type Tab = 'dados' | 'avatar' | 'brain' | 'carta'
+type Tab = 'dados' | 'avatar' | 'brain' | 'carta' | 'datas'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -26,6 +26,9 @@ export function Clients() {
   const [newName, setNewName] = useState('')
   const [newSegment, setNewSegment] = useState('')
   const [saved, setSaved] = useState(false)
+  const [generatingDates, setGeneratingDates] = useState(false)
+  const [datesResult, setDatesResult] = useState<{ inserted: number } | null>(null)
+  const [existingDates, setExistingDates] = useState<any[]>([])
 
   async function load() {
     const { data } = await supabase.from('clients').select('*').order('name')
@@ -38,6 +41,8 @@ export function Clients() {
     setSelected(c)
     setForm(c)
     setTab('dados')
+    setDatesResult(null)
+    supabase.from('important_dates').select('*').eq('client_id', c.id).order('date').then(({ data }) => setExistingDates(data ?? []))
   }
 
   async function createClient(e: React.FormEvent) {
@@ -54,6 +59,24 @@ export function Clients() {
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
     load()
+  }
+
+  async function generateDates() {
+    if (!selected) return
+    setGeneratingDates(true)
+    setDatesResult(null)
+    const { data } = await supabase.functions.invoke('ai-generate-dates', {
+      body: { client_id: selected.id },
+    })
+    setDatesResult(data)
+    supabase.from('important_dates').select('*').eq('client_id', selected.id).order('date').then(({ r }: any) => setExistingDates(r ?? []))
+    supabase.from('important_dates').select('*').eq('client_id', selected.id).order('date').then(({ data: d }) => setExistingDates(d ?? []))
+    setGeneratingDates(false)
+  }
+
+  async function deleteDate(id: string) {
+    await supabase.from('important_dates').delete().eq('id', id)
+    setExistingDates((prev) => prev.filter((d) => d.id !== id))
   }
 
   const field = (label: string, key: keyof Client, multiline = false) => (
@@ -96,6 +119,7 @@ export function Clients() {
     { key: 'avatar', label: 'Avatar' },
     { key: 'brain', label: 'Business Brain' },
     { key: 'carta', label: 'Carta de Vendas' },
+    { key: 'datas', label: `Datas do nicho${existingDates.length > 0 ? ` (${existingDates.length})` : ''}` },
   ]
 
   return (
@@ -249,6 +273,74 @@ export function Clients() {
             {tab === 'brain' && docField('Business Brain', 'brain_doc', 'DNA do negócio: ICP, ofertas, tom de voz (sempre/nunca), regra-âncora e diferenciais.')}
             {tab === 'carta' && docField('Carta de Vendas', 'sales_letter_doc', 'Carta de vendas principal: argumento central, provas sociais, objeções respondidas e CTA.')}
 
+            {tab === 'datas' && (
+              <div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.5 }}>
+                  Gera automaticamente datas comemorativas, eventos e oportunidades de conteúdo específicas do nicho deste cliente. As datas aparecem no Calendário quando você filtra por este cliente.
+                </div>
+                <button
+                  onClick={generateDates}
+                  disabled={generatingDates}
+                  style={{
+                    background: generatingDates ? 'var(--border)' : 'var(--text-primary)',
+                    color: generatingDates ? 'var(--text-tertiary)' : '#fff',
+                    border: 'none', borderRadius: 7, padding: '10px 20px',
+                    fontSize: 13, fontWeight: 600, cursor: generatingDates ? 'not-allowed' : 'pointer',
+                    marginBottom: 16, width: '100%',
+                  }}
+                >
+                  {generatingDates ? 'Gerando datas...' : '✦ Gerar datas do nicho com IA'}
+                </button>
+
+                {datesResult && (
+                  <div style={{ background: '#E0F5EC', border: '1px solid #3A9E6F', borderRadius: 7, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#1D7A4A', fontWeight: 500 }}>
+                    ✓ {datesResult.inserted} datas adicionadas ao calendário
+                  </div>
+                )}
+
+                {existingDates.length > 0 ? (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
+                      {existingDates.length} datas cadastradas
+                    </div>
+                    {existingDates.map((d) => (
+                      <div key={d.id} style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 10,
+                        padding: '10px 0', borderBottom: '1px solid var(--border)',
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{d.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                            {new Date(d.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                            {d.category && ` · ${d.category}`}
+                          </div>
+                          {d.relevance && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{d.relevance}</div>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          {d.should_create_content && (
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: '#FEF0E0', color: '#C06A10', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                              Conteúdo
+                            </span>
+                          )}
+                          <button
+                            onClick={() => deleteDate(d.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: 14, padding: '2px 4px' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '20px 0', textAlign: 'center' }}>
+                    Nenhuma data gerada ainda. Clique no botão acima.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab !== 'datas' && (
             <button
               onClick={save}
               style={{
@@ -266,6 +358,7 @@ export function Clients() {
             >
               {saved ? '✓ Salvo!' : 'Salvar'}
             </button>
+            )}
           </div>
         </div>
       )}

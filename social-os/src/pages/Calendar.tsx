@@ -50,14 +50,19 @@ export function Calendar() {
     return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear()
   }).sort((a, b) => (a.publication_date ?? '').localeCompare(b.publication_date ?? ''))
 
+  // Filtra datas importantes: globais (sem client_id) + do cliente selecionado
+  const filteredDates = importantDates.filter((d) =>
+    !d.client_id || !filterClient || d.client_id === filterClient
+  )
+
   // Datas importantes do mês
-  const monthDates = importantDates.filter((d) => {
+  const monthDates = filteredDates.filter((d) => {
     const dt = new Date(d.date + 'T00:00:00')
     return dt.getMonth() === month.getMonth() && dt.getFullYear() === month.getFullYear()
   })
 
   // Alertas: datas que precisam de conteúdo mas não têm nada agendado nos 7 dias anteriores
-  const alerts = importantDates.filter((d) => {
+  const alerts = filteredDates.filter((d) => {
     if (!d.should_create_content) return false
     const dt = new Date(d.date + 'T00:00:00')
     const today = new Date()
@@ -76,7 +81,7 @@ export function Calendar() {
   }
 
   function getDayImportantDates(day: Date) {
-    return importantDates.filter((d) => isSameDay(new Date(d.date + 'T00:00:00'), day))
+    return filteredDates.filter((d) => isSameDay(new Date(d.date + 'T00:00:00'), day))
   }
 
   function isDayAlert(day: Date) {
