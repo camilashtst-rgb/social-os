@@ -6,6 +6,15 @@ import type { Content } from '../types'
 
 export function MyDay() {
   const [contents, setContents] = useState<Content[]>([])
+  const [briefing, setBriefing] = useState('')
+  const [loadingBriefing, setLoadingBriefing] = useState(false)
+
+  async function generateBriefing() {
+    setLoadingBriefing(true)
+    const { data } = await supabase.functions.invoke('ai-daily-briefing', { body: {} })
+    setBriefing(data?.briefing ?? '')
+    setLoadingBriefing(false)
+  }
 
   useEffect(() => {
     supabase.from('contents').select('*, client:clients(name)').then(({ data }) => setContents(data ?? []))
@@ -21,6 +30,17 @@ export function MyDay() {
 
   return (
     <div style={{ maxWidth: 720 }}>
+      <div style={{ marginBottom: 28 }}>
+        <button onClick={generateBriefing} disabled={loadingBriefing} style={{ background: loadingBriefing ? 'var(--beige-md)' : 'var(--charcoal)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 14, cursor: loadingBriefing ? 'not-allowed' : 'pointer' }}>
+          {loadingBriefing ? 'Gerando briefing...' : '✨ Gerar Briefing do Dia'}
+        </button>
+        {briefing && (
+          <div style={{ marginTop: 16, background: 'var(--white)', border: '1px solid var(--caramel)', borderRadius: 8, padding: 20, fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+            {briefing}
+          </div>
+        )}
+      </div>
+
       {sections.map(({ emoji, label, items }) => (
         <section key={label} style={{ marginBottom: 28 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, marginBottom: 10 }}>{emoji} {label}</h2>

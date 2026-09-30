@@ -13,6 +13,8 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
   const [tab, setTab] = useState<'detalhes' | 'checklist' | 'historico'>('detalhes')
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
+  const [caption, setCaption] = useState('')
+  const [loadingCaption, setLoadingCaption] = useState(false)
 
   useEffect(() => {
     if (!content) return
@@ -27,6 +29,22 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
   async function save() {
     await supabase.from('contents').update({ title, notes }).eq('id', content!.id)
     onUpdate()
+  }
+
+  async function generateCaption() {
+    setLoadingCaption(true)
+    const { data } = await supabase.functions.invoke('ai-generate-caption', {
+      body: {
+        title: content!.title,
+        format: content!.format,
+        objective: content!.objective,
+        pillar: content!.pillar,
+        voice_tone: (content!.client as any)?.voice_tone,
+        client_name: (content!.client as any)?.name,
+      },
+    })
+    setCaption(data?.caption ?? '')
+    setLoadingCaption(false)
   }
 
   async function changeStatus(newStatus: ContentStatus) {
@@ -91,6 +109,21 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
             <button onClick={save} style={{ marginTop: 16, background: 'var(--caramel)', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 14, cursor: 'pointer', width: '100%' }}>
               Salvar
             </button>
+
+            <div style={{ marginTop: 20, borderTop: '1px solid var(--beige-lt)', paddingTop: 16 }}>
+              <button onClick={generateCaption} disabled={loadingCaption} style={{ background: loadingCaption ? 'var(--beige-md)' : 'var(--charcoal)', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 14, cursor: loadingCaption ? 'not-allowed' : 'pointer', width: '100%' }}>
+                {loadingCaption ? 'Gerando legenda...' : '✨ Gerar Legenda com IA'}
+              </button>
+              {caption && (
+                <div style={{ marginTop: 12 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--beige-md)' }}>LEGENDA GERADA</label>
+                  <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={8} style={{ width: '100%', padding: '8px', border: '1px solid var(--caramel)', borderRadius: 6, marginTop: 4, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }} />
+                  <button onClick={() => navigator.clipboard.writeText(caption)} style={{ background: 'none', border: '1px solid var(--caramel)', color: 'var(--caramel)', borderRadius: 6, padding: '6px 16px', fontSize: 12, cursor: 'pointer', marginTop: 6 }}>
+                    Copiar legenda
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

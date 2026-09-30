@@ -11,6 +11,9 @@ export function Ideas() {
   const [clients, setClients] = useState<ClientOption[]>([])
   const [title, setTitle] = useState('')
   const [clientId, setClientId] = useState('')
+  const [trends, setTrends] = useState<any[]>([])
+  const [loadingTrends, setLoadingTrends] = useState(false)
+  const [trendClientId, setTrendClientId] = useState('')
   const navigate = useNavigate()
 
   async function load() {
@@ -35,6 +38,18 @@ export function Ideas() {
     navigate('/conteudos')
   }
 
+  async function searchTrends() {
+    if (!trendClientId) return
+    setLoadingTrends(true)
+    const client = clients.find((c) => c.id === trendClientId)
+    const { data: clientData } = await supabase.from('clients').select('segment, cities').eq('id', trendClientId).single()
+    const { data } = await supabase.functions.invoke('ai-viral-research', {
+      body: { segment: clientData?.segment, cities: clientData?.cities, client_name: client?.name },
+    })
+    setTrends(data?.results ?? [])
+    setLoadingTrends(false)
+  }
+
   return (
     <div style={{ maxWidth: 800 }}>
       <form onSubmit={addIdea} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
@@ -45,6 +60,29 @@ export function Ideas() {
         </select>
         <button type="submit" style={{ background: 'var(--caramel)', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer' }}>+ Adicionar</button>
       </form>
+
+      <div style={{ marginBottom: 24, background: 'var(--white)', border: '1px solid var(--beige-lt)', borderRadius: 8, padding: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--beige-md)', marginBottom: 10 }}>PESQUISAR TENDÊNCIAS COM IA</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <select value={trendClientId} onChange={(e) => setTrendClientId(e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--beige-lt)', borderRadius: 6, fontSize: 14 }}>
+            <option value="">Selecione o cliente</option>
+            {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <button onClick={searchTrends} disabled={loadingTrends || !trendClientId} style={{ background: loadingTrends ? 'var(--beige-md)' : 'var(--charcoal)', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 14, cursor: loadingTrends || !trendClientId ? 'not-allowed' : 'pointer' }}>
+            {loadingTrends ? 'Buscando...' : '✨ Buscar'}
+          </button>
+        </div>
+        {trends.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            {trends.map((t, i) => (
+              <a key={i} href={t.url} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '8px 0', borderBottom: '1px solid var(--beige-lt)', fontSize: 13, color: 'var(--charcoal)', textDecoration: 'none' }}>
+                <div style={{ fontWeight: 500 }}>{t.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--beige-md)', marginTop: 2 }}>{t.url}</div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
 
       {ideas.map((idea) => (
         <div key={idea.id} style={{ background: 'var(--white)', border: '1px solid var(--beige-lt)', borderRadius: 8, padding: '12px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
