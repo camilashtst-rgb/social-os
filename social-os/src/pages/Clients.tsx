@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Client } from '../types'
 
+type Tab = 'dados' | 'avatar' | 'brain' | 'carta'
+
 export function Clients() {
   const [clients, setClients] = useState<Client[]>([])
   const [selected, setSelected] = useState<Client | null>(null)
   const [form, setForm] = useState<Partial<Client>>({})
+  const [tab, setTab] = useState<Tab>('dados')
   const [showNewForm, setShowNewForm] = useState(false)
   const [newName, setNewName] = useState('')
   const [newSegment, setNewSegment] = useState('')
+  const [saved, setSaved] = useState(false)
 
   async function load() {
     const { data } = await supabase.from('clients').select('*').order('name')
@@ -20,6 +24,7 @@ export function Clients() {
   function selectClient(c: Client) {
     setSelected(c)
     setForm(c)
+    setTab('dados')
   }
 
   async function createClient(e: React.FormEvent) {
@@ -33,6 +38,8 @@ export function Clients() {
   async function save() {
     if (!selected) return
     await supabase.from('clients').update({ ...form, updated_at: new Date().toISOString() }).eq('id', selected.id)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
     load()
   }
 
@@ -47,9 +54,29 @@ export function Clients() {
     </div>
   )
 
+  const docField = (label: string, key: 'avatar_doc' | 'brain_doc' | 'sales_letter_doc', hint: string) => (
+    <div>
+      <div style={{ fontSize: 12, color: 'var(--beige-md)', marginBottom: 8 }}>{hint}</div>
+      <textarea
+        value={(form[key] as string) ?? ''}
+        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+        rows={22}
+        placeholder={`Cole aqui o ${label}...`}
+        style={{ width: '100%', padding: '10px', border: '1px solid var(--beige-lt)', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+      />
+    </div>
+  )
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'dados', label: 'Dados' },
+    { key: 'avatar', label: 'Avatar' },
+    { key: 'brain', label: 'Business Brain' },
+    { key: 'carta', label: 'Carta de Vendas' },
+  ]
+
   return (
     <div style={{ display: 'flex', gap: 24 }}>
-      <div style={{ width: 260 }}>
+      <div style={{ width: 260, flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, margin: 0 }}>Clientes</h3>
           <button onClick={() => setShowNewForm(!showNewForm)} style={{ background: 'var(--caramel)', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>
@@ -72,19 +99,37 @@ export function Clients() {
       </div>
 
       {selected && (
-        <div style={{ flex: 1, background: 'var(--white)', borderRadius: 8, border: '1px solid var(--beige-lt)', padding: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginBottom: 20 }}>{selected.name}</h2>
-          {field('Nome', 'name')}
-          {field('Segmento', 'segment')}
-          {field('Público-alvo', 'target_audience')}
-          {field('Cidades / Regiões', 'cities')}
-          {field('Posicionamento', 'positioning', true)}
-          {field('Tom de voz', 'voice_tone')}
-          {field('Objetivos', 'objectives', true)}
-          {field('Serviços', 'services', true)}
-          {field('Notas', 'notes', true)}
-          <button onClick={save} style={{ background: 'var(--caramel)', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 14, cursor: 'pointer' }}>
-            Salvar
+        <div style={{ flex: 1, background: 'var(--white)', borderRadius: 8, border: '1px solid var(--beige-lt)', padding: 24, minWidth: 0 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginBottom: 16 }}>{selected.name}</h2>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '1px solid var(--beige-lt)', paddingBottom: 12 }}>
+            {tabs.map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{ background: tab === t.key ? 'var(--caramel)' : 'none', color: tab === t.key ? '#fff' : 'var(--beige-md)', border: '1px solid var(--beige-lt)', borderRadius: 6, padding: '4px 14px', fontSize: 12, cursor: 'pointer' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'dados' && (
+            <div>
+              {field('Nome', 'name')}
+              {field('Segmento', 'segment')}
+              {field('Público-alvo', 'target_audience')}
+              {field('Cidades / Regiões', 'cities')}
+              {field('Posicionamento', 'positioning', true)}
+              {field('Tom de voz', 'voice_tone')}
+              {field('Objetivos', 'objectives', true)}
+              {field('Serviços', 'services', true)}
+              {field('Notas', 'notes', true)}
+            </div>
+          )}
+
+          {tab === 'avatar' && docField('Avatar', 'avatar_doc', 'Descreva o cliente ideal: quem é, dores profundas, desejos, objeções e gatilhos de compra.')}
+          {tab === 'brain' && docField('Business Brain', 'brain_doc', 'DNA do negócio: ICP, ofertas, tom de voz (sempre/nunca), regra-âncora e diferenciais.')}
+          {tab === 'carta' && docField('Carta de Vendas', 'sales_letter_doc', 'Carta de vendas principal: argumento central, provas sociais, objeções respondidas e CTA.')}
+
+          <button onClick={save} style={{ marginTop: 20, background: saved ? 'green' : 'var(--caramel)', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 24px', fontSize: 14, cursor: 'pointer' }}>
+            {saved ? 'Salvo!' : 'Salvar'}
           </button>
         </div>
       )}

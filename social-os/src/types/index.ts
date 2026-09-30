@@ -27,6 +27,9 @@ export interface Client {
   references: string | null
   links: string | null
   notes: string | null
+  avatar_doc: string | null
+  brain_doc: string | null
+  sales_letter_doc: string | null
   created_at: string
   updated_at: string
 }
