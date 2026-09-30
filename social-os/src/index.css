@@ -1,22 +1,96 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --cream: #FAF7F4;
-  --beige-lt: #E6DED8;
-  --beige-md: #B8A593;
+  /* Brand palette */
   --caramel: #A3815E;
-  --charcoal: #3F3B37;
-  --white: #FFFFFF;
+  --caramel-lt: #F5EDE3;
+  --caramel-md: #C4A27A;
   --terracotta: #C0715A;
+  --terracotta-lt: #FCEAE6;
+
+  /* Neutrals — clean light */
+  --bg: #FFFFFF;
+  --surface: #FAFAFA;
+  --surface-raised: #FFFFFF;
+  --border: #E8E4DF;
+  --border-strong: #D1CBC3;
+
+  /* Text */
+  --text-primary: #1C1A18;
+  --text-secondary: #6B6560;
+  --text-tertiary: #A09890;
+
+  /* Status colors */
+  --status-ideia: #8B7EC8;
+  --status-planejamento: #6B9FD4;
+  --status-roteiro: #5BBFAD;
+  --status-producao: #E8973A;
+  --status-revisao: #D4845A;
+  --status-aprovacao: #C4A020;
+  --status-ajustes: #C05050;
+  --status-aprovado: #3A9E6F;
+  --status-agendado: #5A8FE0;
+  --status-publicado: #2D7D55;
+  --status-arquivado: #9E9590;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(28,26,24,0.06), 0 1px 2px rgba(28,26,24,0.04);
+  --shadow-md: 0 4px 12px rgba(28,26,24,0.08), 0 2px 4px rgba(28,26,24,0.05);
+  --shadow-lg: 0 12px 32px rgba(28,26,24,0.10), 0 4px 8px rgba(28,26,24,0.06);
+
+  /* Typography */
   --font-display: 'Montserrat', sans-serif;
   --font-body: 'Montserrat', sans-serif;
+
+  /* Legacy aliases — mantém compatibilidade */
+  --cream: #FAF7F4;
+  --beige-lt: #E8E4DF;
+  --beige-md: #A09890;
+  --charcoal: #1C1A18;
+  --white: #FFFFFF;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   font-family: var(--font-body);
-  background-color: var(--cream);
-  color: var(--charcoal);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Scrollbar — refinado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* Typography utilities */
 .font-display { font-family: var(--font-display); }
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+
+/* Card — base */
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Section label */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+}
+
+/* Input base */
+input, textarea, select {
+  font-family: var(--font-body);
+}

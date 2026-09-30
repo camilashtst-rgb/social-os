@@ -6,6 +6,37 @@ import { StatusPill } from '../components/ui/StatusPill'
 import { useAppStore } from '../store/app'
 import type { Content, ImportantDate, Settings } from '../types'
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 style={{
+      fontFamily: 'var(--font-display)',
+      fontSize: 13,
+      fontWeight: 700,
+      color: 'var(--text-secondary)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.07em',
+      marginBottom: 12,
+      marginTop: 0,
+    }}>
+      {children}
+    </h2>
+  )
+}
+
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{
+      background: 'var(--bg)',
+      border: '1px solid var(--border)',
+      borderRadius: 10,
+      boxShadow: 'var(--shadow-sm)',
+      ...style,
+    }}>
+      {children}
+    </div>
+  )
+}
+
 export function Home() {
   const [contents, setContents] = useState<Content[]>([])
   const [dates, setDates] = useState<ImportantDate[]>([])
@@ -39,7 +70,11 @@ export function Home() {
     load()
   }, [])
 
-  if (loading) return <div style={{ padding: 40, color: 'var(--beige-md)' }}>Carregando...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, color: 'var(--text-tertiary)', fontSize: 14 }}>
+      Carregando...
+    </div>
+  )
 
   const overdue = contents.filter(isOverdue)
   const dueToday = contents.filter(isDueToday)
@@ -53,113 +88,171 @@ export function Home() {
   const actionsNeeded = [...overdue, ...dueToday.filter((c) => !overdue.includes(c))]
 
   return (
-    <div style={{ display: 'flex', gap: 24 }}>
-      <div style={{ flex: 1 }}>
+    <div style={{ display: 'flex', gap: 24, maxWidth: 1400 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         {/* Count cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10, marginBottom: 28 }}>
           <CountCard label="Atrasados" count={overdue.length} color="var(--terracotta)" />
-          <CountCard label="Fazer hoje" count={dueToday.length} color="#C48435" />
-          <CountCard label="Aprovação" count={pendingApproval.length} color="#C4A835" />
+          <CountCard label="Hoje" count={dueToday.length} color="#C48435" />
+          <CountCard label="Aprovação" count={pendingApproval.length} color="#C4A020" />
           <CountCard label="Em produção" count={inProduction.length} color="var(--caramel)" />
-          <CountCard label="Agendados" count={scheduled.length} color="#3A9E8F" />
-          <CountCard label="Ideias" count={ideasCount} color="var(--beige-md)" />
+          <CountCard label="Agendados" count={scheduled.length} color="#3A9E6F" />
+          <CountCard label="Ideias" count={ideasCount} color="var(--text-tertiary)" />
         </div>
 
         {/* Actions needed */}
-        <section style={{ marginBottom: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, marginBottom: 12 }}>Ações necessárias hoje</h2>
+        <section style={{ marginBottom: 28 }}>
+          <SectionTitle>Ações necessárias hoje</SectionTitle>
           {actionsNeeded.length === 0 ? (
-            <p style={{ color: 'var(--beige-md)', fontSize: 14 }}>Nenhuma ação urgente.</p>
+            <Card style={{ padding: '16px 20px' }}>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: 14, margin: 0 }}>
+                Nenhuma ação urgente — tudo em dia ✓
+              </p>
+            </Card>
           ) : actionsNeeded.map((c) => (
-            <div key={c.id} style={{
-              background: 'var(--white)', border: '1px solid var(--beige-lt)', borderRadius: 8,
-              padding: '12px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12,
-            }}>
-              {isOverdue(c) && <span style={{ color: 'var(--terracotta)', fontSize: 12, fontWeight: 700 }}>ATRASADO</span>}
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 500 }}>{c.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--beige-md)' }}>{(c.client as any)?.name}</div>
+            <Card key={c.id} style={{ padding: '12px 16px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 12 }}>
+              {isOverdue(c) && (
+                <span style={{
+                  background: 'var(--terracotta-lt)',
+                  color: 'var(--terracotta)',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: '2px 7px',
+                  borderRadius: 4,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  whiteSpace: 'nowrap',
+                }}>
+                  Atrasado
+                </span>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.title}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 1 }}>
+                  {(c.client as any)?.name}
+                </div>
               </div>
               <StatusPill status={c.status} />
-              <span style={{ fontSize: 12, color: 'var(--caramel)' }}>{getNextAction(c.status).label}</span>
-            </div>
+              <span style={{ fontSize: 12, color: 'var(--caramel)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {getNextAction(c.status).label}
+              </span>
+            </Card>
           ))}
         </section>
 
         {/* Upcoming publications */}
         <section>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, marginBottom: 12 }}>Próximas publicações — 14 dias</h2>
+          <SectionTitle>Próximas publicações — 14 dias</SectionTitle>
           {upcoming14.length === 0 ? (
-            <p style={{ color: 'var(--beige-md)', fontSize: 14 }}>Nenhuma publicação nos próximos 14 dias.</p>
+            <Card style={{ padding: '16px 20px' }}>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: 14, margin: 0 }}>
+                Nenhuma publicação nos próximos 14 dias.
+              </p>
+            </Card>
           ) : upcoming14.map((c) => {
             const days = daysUntil(c.publication_date!)
-            const daysColor = days <= 2 ? 'var(--terracotta)' : days <= 6 ? '#C48435' : 'var(--charcoal)'
+            const daysColor = days <= 2 ? 'var(--terracotta)' : days <= 6 ? '#C48435' : 'var(--text-secondary)'
             return (
-              <div key={c.id} style={{
-                background: 'var(--white)', border: '1px solid var(--beige-lt)', borderRadius: 8,
-                padding: '10px 16px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 12,
-              }}>
-                <span style={{ fontSize: 13, color: daysColor, fontWeight: 600, minWidth: 60 }}>
+              <Card key={c.id} style={{ padding: '10px 16px', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  minWidth: 44,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: daysColor,
+                  fontFamily: 'var(--font-display)',
+                }}>
                   {days === 0 ? 'Hoje' : `${days}d`}
-                </span>
-                <span style={{ fontSize: 13, color: 'var(--beige-md)', minWidth: 100 }}>
+                </div>
+                <span style={{ fontSize: 12, color: 'var(--text-tertiary)', minWidth: 90 }}>
                   {formatDate(c.publication_date!)}
                 </span>
-                <span style={{ flex: 1, fontSize: 14 }}>{c.title}</span>
+                <span style={{ flex: 1, fontSize: 14, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.title}
+                </span>
                 <StatusPill status={c.status} />
-              </div>
+              </Card>
             )
           })}
         </section>
       </div>
 
       {/* Right panels */}
-      <div style={{ width: 280, flexShrink: 0 }}>
+      <div style={{ width: 272, flexShrink: 0 }}>
         {/* WIP control */}
-        <div style={{ background: 'var(--white)', border: '1px solid var(--beige-lt)', borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 12 }}>Controle de WIP</h3>
+        <Card style={{ padding: '16px 18px', marginBottom: 16 }}>
+          <SectionTitle>Controle de WIP</SectionTitle>
           {[
             { label: 'Vídeos em produção', value: wipVideo, limit: wipLimit },
             { label: 'Total em produção', value: inProduction.length, limit: settings?.wip_production_limit ?? 3 },
             { label: 'Aguardando aprovação', value: pendingApproval.length, limit: settings?.wip_approval_limit ?? 3 },
           ].map(({ label, value, limit }) => (
-            <div key={label} style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                <span>{label}</span>
-                <span style={{ color: value > limit ? 'var(--terracotta)' : 'var(--caramel)', fontWeight: 600 }}>
+            <div key={label} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{label}</span>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: value > limit ? 'var(--terracotta)' : 'var(--caramel)',
+                }}>
                   {value}/{limit}
                 </span>
               </div>
-              <div style={{ background: 'var(--beige-lt)', borderRadius: 4, height: 6 }}>
+              <div style={{ background: 'var(--border)', borderRadius: 4, height: 5 }}>
                 <div style={{
-                  width: `${Math.min(100, (value / limit) * 100)}%`, height: '100%', borderRadius: 4,
+                  width: `${Math.min(100, (value / limit) * 100)}%`,
+                  height: '100%',
+                  borderRadius: 4,
                   background: value > limit ? 'var(--terracotta)' : 'var(--caramel)',
+                  transition: 'width 0.3s',
                 }} />
               </div>
             </div>
           ))}
-        </div>
+        </Card>
 
         {/* Radar de Datas */}
-        <div style={{ background: 'var(--white)', border: '1px solid var(--beige-lt)', borderRadius: 8, padding: 16 }}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 12 }}>Radar de Datas</h3>
+        <Card style={{ padding: '16px 18px' }}>
+          <SectionTitle>Radar de Datas</SectionTitle>
           {upcomingDates.length === 0 ? (
-            <p style={{ color: 'var(--beige-md)', fontSize: 13 }}>Sem datas próximas.</p>
+            <p style={{ color: 'var(--text-tertiary)', fontSize: 13, margin: 0 }}>Sem datas próximas.</p>
           ) : upcomingDates.slice(0, 6).map((d) => (
-            <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 13 }}>
-              <div>
-                <div style={{ fontWeight: 500 }}>{d.name}</div>
-                <div style={{ fontSize: 11, color: 'var(--beige-md)' }}>{formatDate(d.date)}</div>
+            <div key={d.id} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: 10,
+              paddingBottom: 10,
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {d.name}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 1 }}>
+                  {formatDate(d.date)}
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, color: 'var(--caramel)' }}>{daysUntil(d.date)}d</div>
+              <div style={{ textAlign: 'right', marginLeft: 8, flexShrink: 0 }}>
+                <div style={{ fontWeight: 700, color: 'var(--caramel)', fontSize: 13 }}>
+                  {daysUntil(d.date)}d
+                </div>
                 {d.should_create_content && (
-                  <span style={{ fontSize: 10, color: 'var(--terracotta)', fontWeight: 600 }}>CONTEÚDO</span>
+                  <span style={{
+                    fontSize: 9,
+                    color: 'var(--terracotta)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}>
+                    Conteúdo
+                  </span>
                 )}
               </div>
             </div>
           ))}
-        </div>
+        </Card>
       </div>
     </div>
   )

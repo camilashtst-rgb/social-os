@@ -31,7 +31,7 @@ function Layout() {
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Topbar title={title} />
-        <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
+        <main style={{ flex: 1, padding: 28, overflowY: 'auto', background: 'var(--surface)' }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/meu-dia" element={<MyDay />} />
