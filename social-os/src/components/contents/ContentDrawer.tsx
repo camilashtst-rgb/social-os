@@ -39,8 +39,7 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
         format: content!.format,
         objective: content!.objective,
         pillar: content!.pillar,
-        voice_tone: (content!.client as any)?.voice_tone,
-        client_name: (content!.client as any)?.name,
+        client_id: content!.client_id,
       },
     })
     setCaption(data?.caption ?? '')
