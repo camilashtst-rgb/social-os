@@ -45,7 +45,9 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
     if (!content) return
     setTitle(content.title)
     setNotes(content.notes ?? '')
-    setCaption(''); setYoutube(null); setCarousel(null)
+    setCaption((content as any).caption ?? '')
+    setYoutube((content as any).ai_youtube ? JSON.parse((content as any).ai_youtube) : null)
+    setCarousel((content as any).ai_carousel ? JSON.parse((content as any).ai_carousel) : null)
     supabase.from('content_checklist').select('*').eq('content_id', content.id).then(({ data }) => setChecklist(data ?? []))
     supabase.from('content_history').select('*').eq('content_id', content.id).order('created_at', { ascending: false }).then(({ data }) => setHistory(data ?? []))
   }, [content])
@@ -60,27 +62,31 @@ export function ContentDrawer({ content, onClose, onUpdate }: Props) {
   async function generateCaption() {
     setLoadingCaption(true)
     const { data } = await supabase.functions.invoke('ai-generate-caption', {
-      body: { title: content!.title, format: content!.format, objective: content!.objective, pillar: content!.pillar, client_id: content!.client_id },
+      body: { title: content!.title, format: content!.format, objective: content!.objective, pillar: content!.pillar, notes: notes, client_id: content!.client_id },
     })
-    setCaption(data?.caption ?? '')
+    const result = data?.caption ?? ''
+    setCaption(result)
+    await supabase.from('contents').update({ caption: result } as any).eq('id', content!.id)
     setLoadingCaption(false)
   }
 
   async function generateYoutube() {
     setLoadingYoutube(true)
     const { data } = await supabase.functions.invoke('ai-generate-youtube', {
-      body: { title: content!.title, objective: content!.objective, client_id: content!.client_id },
+      body: { title: content!.title, objective: content!.objective, notes: notes, client_id: content!.client_id },
     })
     setYoutube(data)
+    await supabase.from('contents').update({ ai_youtube: JSON.stringify(data) } as any).eq('id', content!.id)
     setLoadingYoutube(false)
   }
 
   async function generateCarousel() {
     setLoadingCarousel(true)
     const { data } = await supabase.functions.invoke('ai-generate-carousel', {
-      body: { title: content!.title, objective: content!.objective, client_id: content!.client_id },
+      body: { title: content!.title, objective: content!.objective, notes: notes, client_id: content!.client_id },
     })
     setCarousel(data)
+    await supabase.from('contents').update({ ai_carousel: JSON.stringify(data) } as any).eq('id', content!.id)
     setLoadingCarousel(false)
   }
 
