@@ -9,24 +9,32 @@ import type { Content, ImportantDate, Settings } from '../types'
 export function Home() {
   const [contents, setContents] = useState<Content[]>([])
   const [dates, setDates] = useState<ImportantDate[]>([])
+  const [ideasCount, setIdeasCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const { settings, setSettings, setNotificationCount } = useAppStore()
 
   useEffect(() => {
     async function load() {
-      const [{ data: c }, { data: d }, { data: s }] = await Promise.all([
-        supabase.from('contents').select('*, client:clients(name)').order('publication_date'),
-        supabase.from('important_dates').select('*').order('date'),
-        supabase.from('settings').select('*').limit(1).single(),
-      ])
-      setContents(c ?? [])
-      setDates(d ?? [])
-      if (s) setSettings(s as Settings)
-      setLoading(false)
+      try {
+        const [{ data: c }, { data: d }, { data: s }, { count: ideasTotal }] = await Promise.all([
+          supabase.from('contents').select('*, client:clients(name)').order('publication_date'),
+          supabase.from('important_dates').select('*').order('date'),
+          supabase.from('settings').select('*').limit(1).maybeSingle(),
+          supabase.from('ideas').select('id', { count: 'exact', head: true }),
+        ])
+        setContents(c ?? [])
+        setDates(d ?? [])
+        if (s) setSettings(s as Settings)
+        setIdeasCount(ideasTotal ?? 0)
 
-      const overdue = (c ?? []).filter(isOverdue).length
-      const pending = (c ?? []).filter(isPendingApprovalTooLong).length
-      setNotificationCount(overdue + pending)
+        const overdue = (c ?? []).filter(isOverdue).length
+        const pending = (c ?? []).filter((item) => isPendingApprovalTooLong(item, s?.alert_approval_days ?? 2)).length
+        setNotificationCount(overdue + pending)
+      } catch (err) {
+        console.error('Home load error:', err)
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
@@ -54,7 +62,7 @@ export function Home() {
           <CountCard label="Aprovação" count={pendingApproval.length} color="#C4A835" />
           <CountCard label="Em produção" count={inProduction.length} color="var(--caramel)" />
           <CountCard label="Agendados" count={scheduled.length} color="#3A9E8F" />
-          <CountCard label="Ideias" count={0} color="var(--beige-md)" />
+          <CountCard label="Ideias" count={ideasCount} color="var(--beige-md)" />
         </div>
 
         {/* Actions needed */}

@@ -31,8 +31,8 @@ export function Ideas() {
     load()
   }
 
-  async function promote(idea: Idea) {
-    navigate(`/conteudos/novo?idea=${idea.id}&title=${encodeURIComponent(idea.title)}&client=${idea.client_id}`)
+  async function promote(_idea: Idea) {
+    navigate('/conteudos')
   }
 
   return (

@@ -25,6 +25,12 @@ describe('isOverdue', () => {
     const content = { ...base, production_deadline: '2020-01-01', status: 'aprovado' as const }
     expect(isOverdue(content)).toBe(false)
   })
+
+  it('returns false when production_deadline is today (isDueToday handles this)', () => {
+    const today = new Date().toLocaleDateString('en-CA')
+    const content = { ...base, production_deadline: today, status: 'planejamento' as const }
+    expect(isOverdue(content)).toBe(false)
+  })
 })
 
 describe('isDueToday', () => {

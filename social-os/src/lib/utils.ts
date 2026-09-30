@@ -11,11 +11,13 @@ export function isOverdue(content: Content): boolean {
   const productionOverdue =
     content.production_deadline &&
     isPast(parseISO(content.production_deadline)) &&
+    !isToday(parseISO(content.production_deadline)) &&
     !LATE_STATUSES.includes(content.status)
 
   const approvalOverdue =
     content.approval_deadline &&
     isPast(parseISO(content.approval_deadline)) &&
+    !isToday(parseISO(content.approval_deadline)) &&
     !['aprovado', 'agendado', 'publicado', 'arquivado'].includes(content.status)
 
   return !!(productionOverdue || approvalOverdue)

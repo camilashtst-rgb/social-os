@@ -44,7 +44,7 @@ export function Topbar({ title }: TopbarProps) {
         )}
       </button>
       <button
-        onClick={() => navigate('/conteudos/novo')}
+        onClick={() => navigate('/conteudos')}
         style={{
           background: 'var(--caramel)', color: '#fff', border: 'none',
           borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
