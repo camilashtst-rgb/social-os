@@ -240,15 +240,28 @@ export function Ideas() {
           </div>
           <PriorityBadge priority={idea.priority} />
           <button
-            onClick={() => navigate('/conteudos')}
+            onClick={async () => {
+              await supabase.from('contents').insert({
+                title: idea.title,
+                client_id: idea.client_id,
+                idea_id: idea.id,
+                format: idea.format ?? 'reels',
+                objective: idea.objective ?? null,
+                category: idea.category ?? null,
+                status: 'planejamento',
+                priority: idea.priority,
+                notes: idea.notes ?? null,
+              })
+              navigate('/conteudos')
+            }}
             style={{
-              background: 'none',
-              border: '1px solid var(--border-strong)',
-              color: 'var(--text-secondary)',
+              background: 'var(--caramel)',
+              color: '#fff',
+              border: 'none',
               borderRadius: 6,
-              padding: '4px 10px',
+              padding: '4px 12px',
               fontSize: 12,
-              fontWeight: 500,
+              fontWeight: 600,
               cursor: 'pointer',
             }}
           >
